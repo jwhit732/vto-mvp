@@ -1,0 +1,26 @@
+{
+  "name": "vto-mvp",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@types/formidable": "^3.4.5",
+    "@types/node": "^24.3.0",
+    "@types/react": "^19.1.12",
+    "formidable": "^3.5.4",
+    "next": "^15.5.2",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "sharp": "^0.34.3",
+    "typescript": "^5.9.2"
+  }
+}

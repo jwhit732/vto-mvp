@@ -1,0 +1,1 @@
+https://apidog.com/blog/nano-banana-via-api/#prerequisites-for-using-the-nano-banana-api
