@@ -61,7 +61,7 @@ function validateImage(file: File): { valid: boolean; error?: string } {
   return { valid: true };
 }
 
-async function callGeminiAPI(personBase64: string, garmentBase64: string, personMimeType: string, garmentMimeType: string, requestId: string): Promise<string> {
+async function callGeminiAPI(personBase64: string, garmentBase64: string, personMimeType: string, garmentMimeType: string, customPrompt: string, requestId: string): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY;
   
   if (!apiKey) {
@@ -89,7 +89,7 @@ async function callGeminiAPI(personBase64: string, garmentBase64: string, person
           } 
         },
         { 
-          text: "Blend these two images: Put the garment from the second image onto the person in the first image. Create a realistic virtual try-on by editing the person to wear the garment while maintaining their pose, face, and natural lighting. Generate the final edited image." 
+          text: customPrompt 
         }
       ]
     }],
@@ -149,11 +149,9 @@ async function callGeminiAPI(personBase64: string, garmentBase64: string, person
     let result;
     try {
       result = await response.json();
-      console.log(`[${requestId}] *** SIMPLE DEBUG START ***`);
-      console.log(`[${requestId}] Candidates length:`, result.candidates?.length || 0);
-      console.log(`[${requestId}] Has content:`, !!result.candidates?.[0]?.content);
+      console.log(`[${requestId}] Successfully parsed JSON response`);
+      console.log(`[${requestId}] Response has candidates:`, !!result.candidates);
       console.log(`[${requestId}] Parts length:`, result.candidates?.[0]?.content?.parts?.length || 0);
-      console.log(`[${requestId}] *** SIMPLE DEBUG END ***`);
     } catch (jsonError) {
       const responseText = await response.text();
       console.error(`[${requestId}] Failed to parse JSON response:`, responseText.substring(0, 500));
@@ -250,10 +248,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const startTime = Date.now();
 
   try {
-    const { files } = await parseForm(req);
+    const { fields, files } = await parseForm(req);
     
     const personFile = Array.isArray(files.person) ? files.person[0] : files.person;
     const garmentFile = Array.isArray(files.garment) ? files.garment[0] : files.garment;
+    const customPrompt = Array.isArray(fields.prompt) ? fields.prompt[0] : fields.prompt;
+
+    console.log(`[${requestId}] Received files:`, { 
+      person: !!personFile, 
+      garment: !!garmentFile,
+      prompt: !!customPrompt 
+    });
 
     if (!personFile || !garmentFile) {
       return res.status(400).json({ error: 'Both person and garment images are required' });
@@ -274,12 +279,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const personBase64 = await processImage(personFile);
     const garmentBase64 = await processImage(garmentFile);
 
+    // Use custom prompt or fallback to default
+    const defaultPrompt = "Blend these two images: Put the garment from the second image onto the person in the first image. Create a realistic virtual try-on by editing the person to wear the garment while maintaining their pose, face, and natural lighting. Generate the final edited image.";
+    const promptToUse = customPrompt || defaultPrompt;
+    
+    console.log(`[${requestId}] Using prompt: ${promptToUse.substring(0, 100)}...`);
+
     // Call Gemini API
     const resultBase64 = await callGeminiAPI(
       personBase64, 
       garmentBase64, 
       personFile.mimetype || 'image/jpeg', 
       garmentFile.mimetype || 'image/png',
+      promptToUse,
       requestId
     );
 

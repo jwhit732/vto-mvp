@@ -8,12 +8,16 @@ interface UploadState {
 
 type AppState = 'idle' | 'running' | 'success' | 'error';
 
+const DEFAULT_PROMPT = "Blend these two images: Put the garment from the second image onto the person in the first image. Create a realistic virtual try-on by editing the person to wear the garment while maintaining their pose, face, and natural lighting. Generate the final edited image.";
+
 export default function Home() {
   const [personState, setPersonState] = useState<UploadState>({ file: null, preview: null });
   const [garmentState, setGarmentState] = useState<UploadState>({ file: null, preview: null });
   const [appState, setAppState] = useState<AppState>('idle');
   const [resultImage, setResultImage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [customPrompt, setCustomPrompt] = useState<string>(DEFAULT_PROMPT);
+  const [showPromptEditor, setShowPromptEditor] = useState<boolean>(false);
 
   const personInputRef = useRef<HTMLInputElement>(null);
   const garmentInputRef = useRef<HTMLInputElement>(null);
@@ -74,6 +78,7 @@ export default function Home() {
       const formData = new FormData();
       formData.append('person', personState.file);
       formData.append('garment', garmentState.file);
+      formData.append('prompt', customPrompt.trim() || DEFAULT_PROMPT);
 
       const response = await fetch('/api/combine', {
         method: 'POST',
@@ -111,9 +116,12 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Virtual Try-On MVP</title>
+        <title>Virtual Try-On</title>
         <meta name="description" content="AI-powered virtual garment try-on" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@300;400;500;600&display=swap" rel="stylesheet" />
       </Head>
 
       <div className="container">
@@ -123,94 +131,130 @@ export default function Home() {
         </header>
 
         <main className="main-content">
-          <div className="upload-panels">
-            {/* Person Upload Panel */}
-            <div className="upload-panel">
-              <h2>Person Photo</h2>
-              <div 
-                className="upload-area"
-                onClick={() => personInputRef.current?.click()}
-              >
-                {personState.preview ? (
-                  <img src={personState.preview} alt="Person preview" />
-                ) : (
-                  <div className="upload-placeholder">
-                    <div className="upload-icon">👤</div>
-                    <p>Click to upload person photo</p>
-                    <small>JPG, PNG • Max 4MB</small>
-                  </div>
-                )}
+          <div className="layout-container">
+            {/* Left Column - Input Images */}
+            <div className="inputs-column">
+              {/* Person Upload Panel */}
+              <div className="upload-panel">
+                <h2>Person Photo</h2>
+                <div 
+                  className="upload-area compact"
+                  onClick={() => personInputRef.current?.click()}
+                >
+                  {personState.preview ? (
+                    <img src={personState.preview} alt="Person preview" className="preview-image" />
+                  ) : (
+                    <div className="upload-placeholder">
+                      <div className="upload-icon">👤</div>
+                      <p>Click to upload person photo</p>
+                      <small>JPG, PNG • Max 4MB</small>
+                    </div>
+                  )}
+                </div>
+                <input
+                  ref={personInputRef}
+                  type="file"
+                  accept=".jpg,.jpeg,.png"
+                  onChange={(e) => handleFileUpload(e, setPersonState)}
+                  style={{ display: 'none' }}
+                />
+                <small className="hint">Single subject, torso visible, arms not crossed</small>
               </div>
-              <input
-                ref={personInputRef}
-                type="file"
-                accept=".jpg,.jpeg,.png"
-                onChange={(e) => handleFileUpload(e, setPersonState)}
-                style={{ display: 'none' }}
-              />
-              <small className="hint">Single subject, torso visible, arms not crossed</small>
+
+              {/* Garment Upload Panel */}
+              <div className="upload-panel">
+                <h2>Garment Image</h2>
+                <div 
+                  className="upload-area compact"
+                  onClick={() => garmentInputRef.current?.click()}
+                >
+                  {garmentState.preview ? (
+                    <img src={garmentState.preview} alt="Garment preview" className="preview-image" />
+                  ) : (
+                    <div className="upload-placeholder">
+                      <div className="upload-icon">👕</div>
+                      <p>Click to upload garment</p>
+                      <small>JPG, PNG • Max 4MB</small>
+                    </div>
+                  )}
+                </div>
+                <input
+                  ref={garmentInputRef}
+                  type="file"
+                  accept=".jpg,.jpeg,.png"
+                  onChange={(e) => handleFileUpload(e, setGarmentState)}
+                  style={{ display: 'none' }}
+                />
+                <small className="hint">Flat-lay product image on plain background works best</small>
+              </div>
             </div>
 
-            {/* Garment Upload Panel */}
-            <div className="upload-panel">
-              <h2>Garment Image</h2>
-              <div 
-                className="upload-area"
-                onClick={() => garmentInputRef.current?.click()}
-              >
-                {garmentState.preview ? (
-                  <img src={garmentState.preview} alt="Garment preview" />
-                ) : (
-                  <div className="upload-placeholder">
-                    <div className="upload-icon">👕</div>
-                    <p>Click to upload garment</p>
-                    <small>JPG, PNG • Max 4MB</small>
-                  </div>
-                )}
+            {/* Right Column - Result */}
+            <div className="result-column">
+              <div className="upload-panel result-panel">
+                <h2>Result</h2>
+                <div className="result-area large">
+                  {appState === 'running' && (
+                    <div className="loading">
+                      <div className="spinner"></div>
+                      <p>Creating your try-on...</p>
+                      <small>This may take up to 60 seconds</small>
+                    </div>
+                  )}
+                  {appState === 'success' && resultImage && (
+                    <div className="result-success">
+                      <img src={resultImage} alt="Virtual try-on result" className="result-image" />
+                      <button onClick={handleDownload} className="download-btn">
+                        Download PNG
+                      </button>
+                    </div>
+                  )}
+                  {appState === 'error' && (
+                    <div className="error-state">
+                      <div className="error-icon">⚠️</div>
+                      <p className="error-message">{errorMessage}</p>
+                    </div>
+                  )}
+                  {appState === 'idle' && (
+                    <div className="upload-placeholder">
+                      <div className="upload-icon">✨</div>
+                      <p>Your result will appear here</p>
+                    </div>
+                  )}
+                </div>
               </div>
-              <input
-                ref={garmentInputRef}
-                type="file"
-                accept=".jpg,.jpeg,.png"
-                onChange={(e) => handleFileUpload(e, setGarmentState)}
-                style={{ display: 'none' }}
-              />
-              <small className="hint">Flat-lay product image on plain background works best</small>
             </div>
+          </div>
 
-            {/* Result Panel */}
-            <div className="upload-panel">
-              <h2>Result</h2>
-              <div className="result-area">
-                {appState === 'running' && (
-                  <div className="loading">
-                    <div className="spinner"></div>
-                    <p>Creating your try-on...</p>
-                    <small>This may take up to 60 seconds</small>
-                  </div>
-                )}
-                {appState === 'success' && resultImage && (
-                  <div className="result-success">
-                    <img src={resultImage} alt="Virtual try-on result" />
-                    <button onClick={handleDownload} className="download-btn">
-                      Download PNG
-                    </button>
-                  </div>
-                )}
-                {appState === 'error' && (
-                  <div className="error-state">
-                    <div className="error-icon">⚠️</div>
-                    <p className="error-message">{errorMessage}</p>
-                  </div>
-                )}
-                {appState === 'idle' && (
-                  <div className="upload-placeholder">
-                    <div className="upload-icon">✨</div>
-                    <p>Your result will appear here</p>
-                  </div>
-                )}
-              </div>
+          <div className="prompt-section">
+            <div className="prompt-header" onClick={() => setShowPromptEditor(!showPromptEditor)}>
+              <h3>AI Prompt {showPromptEditor ? '▼' : '▶'}</h3>
+              <small>Click to {showPromptEditor ? 'hide' : 'customize'} the instructions sent to the AI</small>
             </div>
+            
+            {showPromptEditor && (
+              <div className="prompt-editor">
+                <textarea
+                  value={customPrompt}
+                  onChange={(e) => setCustomPrompt(e.target.value)}
+                  placeholder="Enter custom prompt for the AI..."
+                  rows={4}
+                  className="prompt-textarea"
+                />
+                <div className="prompt-actions">
+                  <button 
+                    onClick={() => setCustomPrompt(DEFAULT_PROMPT)}
+                    className="reset-btn"
+                    type="button"
+                  >
+                    Reset to Default
+                  </button>
+                  <small className="prompt-hint">
+                    Tip: Be specific about the style, lighting, and details you want
+                  </small>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="combine-section">
@@ -234,25 +278,33 @@ export default function Home() {
         <style jsx>{`
           .container {
             min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 20px;
+            background: #ffffff;
+            padding: 40px 20px;
           }
 
           header {
             text-align: center;
-            color: white;
-            margin-bottom: 40px;
+            color: #1a1a1a;
+            margin-bottom: 60px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
           }
 
           header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            font-weight: 700;
+            font-size: 3rem;
+            margin-bottom: 16px;
+            font-weight: 400;
+            letter-spacing: -0.02em;
+            font-family: 'Playfair Display', 'Georgia', serif;
           }
 
           header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
+            font-size: 1.2rem;
+            color: #666;
+            font-weight: 300;
+            line-height: 1.6;
+            font-family: 'Georgia', serif;
           }
 
           .main-content {
@@ -260,81 +312,135 @@ export default function Home() {
             margin: 0 auto;
           }
 
-          .upload-panels {
+          .layout-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: 400px 1fr;
+            gap: 48px;
+            margin-bottom: 48px;
+          }
+
+          .inputs-column {
+            display: flex;
+            flex-direction: column;
             gap: 24px;
-            margin-bottom: 32px;
+          }
+
+          .result-column {
+            display: flex;
           }
 
           .upload-panel {
-            background: white;
-            border-radius: 16px;
+            background: #ffffff;
+            border-radius: 8px;
             padding: 24px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s ease;
+            flex: 1;
+          }
+
+          .upload-panel:hover {
+            border-color: #d1d5db;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+          }
+
+          .result-panel {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
           }
 
           .upload-panel h2 {
-            margin: 0 0 16px 0;
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #333;
+            margin: 0 0 20px 0;
+            font-size: 1.375rem;
+            font-weight: 400;
+            color: #1a1a1a;
+            font-family: 'Playfair Display', 'Georgia', serif;
+            letter-spacing: -0.01em;
           }
 
           .upload-area, .result-area {
-            border: 2px dashed #e1e5e9;
-            border-radius: 12px;
-            min-height: 250px;
+            border: 2px dashed #d1d5db;
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
+            background: #fafafa;
+          }
+
+          .upload-area.compact {
+            min-height: 200px;
+          }
+
+          .result-area.large {
+            min-height: 480px;
+            cursor: default;
           }
 
           .upload-area:hover {
-            border-color: #667eea;
-            background-color: #f8f9ff;
+            border-color: #9ca3af;
+            background-color: #f5f5f5;
           }
 
-          .result-area {
-            cursor: default;
+          .preview-image {
+            max-width: 100%;
+            max-height: 180px;
+            object-fit: contain;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          }
+
+          .result-image {
+            max-width: 100%;
+            max-height: 420px;
+            object-fit: contain;
+            border-radius: 6px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+            margin-bottom: 16px;
           }
 
           .upload-area img, .result-area img {
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
-            border-radius: 8px;
+            border-radius: 6px;
           }
 
           .upload-placeholder {
             text-align: center;
-            color: #64748b;
+            color: #6b7280;
           }
 
           .upload-icon {
-            font-size: 3rem;
-            margin-bottom: 12px;
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+            opacity: 0.7;
           }
 
           .upload-placeholder p {
-            margin: 0 0 8px 0;
-            font-weight: 500;
+            margin: 0 0 12px 0;
+            font-weight: 400;
+            font-size: 1.1rem;
+            font-family: 'Georgia', serif;
+            color: #374151;
           }
 
           .upload-placeholder small {
-            color: #94a3b8;
+            color: #9ca3af;
+            font-size: 0.9rem;
           }
 
           .hint {
             display: block;
-            margin-top: 12px;
-            color: #64748b;
+            margin-top: 16px;
+            color: #6b7280;
             font-style: italic;
             text-align: center;
+            font-size: 0.9rem;
+            font-family: 'Georgia', serif;
           }
 
           .loading {
@@ -397,35 +503,140 @@ export default function Home() {
             margin: 0;
           }
 
+          .prompt-section {
+            max-width: 1200px;
+            margin: 0 auto 40px;
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 28px;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s ease;
+          }
+
+          .prompt-section:hover {
+            border-color: #d1d5db;
+          }
+
+          .prompt-header {
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+            transition: all 0.2s ease;
+          }
+
+          .prompt-header:hover {
+            background: #fafafa;
+            margin: -12px;
+            padding: 12px;
+            border-radius: 6px;
+          }
+
+          .prompt-header h3 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 400;
+            color: #1a1a1a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Playfair Display', 'Georgia', serif;
+            letter-spacing: -0.01em;
+          }
+
+          .prompt-header small {
+            color: #6b7280;
+            font-style: italic;
+            font-family: 'Georgia', serif;
+          }
+
+          .prompt-editor {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #e1e5e9;
+          }
+
+          .prompt-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            resize: vertical;
+            transition: border-color 0.2s ease;
+          }
+
+          .prompt-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+          }
+
+          .prompt-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+          }
+
+          .reset-btn {
+            padding: 8px 16px;
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+          }
+
+          .reset-btn:hover {
+            background: #e2e8f0;
+            border-color: #cbd5e1;
+          }
+
+          .prompt-hint {
+            color: #64748b;
+            font-style: italic;
+          }
+
           .combine-section {
             text-align: center;
           }
 
           .combine-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #1a1a1a;
             color: white;
             border: none;
-            padding: 16px 48px;
+            padding: 18px 48px;
             font-size: 1.125rem;
-            font-weight: 600;
-            border-radius: 50px;
+            font-weight: 400;
+            border-radius: 4px;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            min-width: 140px;
+            min-width: 160px;
             justify-content: center;
+            font-family: 'Georgia', serif;
+            letter-spacing: 0.02em;
           }
 
           .combine-btn:hover:not(.disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            background: #374151;
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
           }
 
           .combine-btn.disabled {
-            opacity: 0.6;
+            opacity: 0.4;
             cursor: not-allowed;
+            background: #9ca3af;
           }
 
           .btn-spinner {
@@ -442,22 +653,66 @@ export default function Home() {
             100% { transform: rotate(360deg); }
           }
 
+          @media (max-width: 1024px) {
+            .layout-container {
+              grid-template-columns: 1fr;
+              gap: 32px;
+            }
+
+            .inputs-column {
+              flex-direction: row;
+              gap: 24px;
+            }
+
+            .result-area.large {
+              min-height: 320px;
+            }
+
+            .result-image {
+              max-height: 280px;
+            }
+          }
+
           @media (max-width: 768px) {
             .container {
-              padding: 16px;
+              padding: 20px 16px;
             }
 
             header h1 {
-              font-size: 2rem;
+              font-size: 2.2rem;
             }
 
-            .upload-panels {
-              grid-template-columns: 1fr;
+            header p {
+              font-size: 1.1rem;
+            }
+
+            .layout-container {
+              gap: 24px;
+            }
+
+            .inputs-column {
+              flex-direction: column;
               gap: 20px;
             }
 
             .upload-panel {
               padding: 20px;
+            }
+
+            .upload-area.compact {
+              min-height: 180px;
+            }
+
+            .result-area.large {
+              min-height: 280px;
+            }
+
+            .preview-image {
+              max-height: 140px;
+            }
+
+            .result-image {
+              max-height: 240px;
             }
 
             .combine-btn {
@@ -476,14 +731,24 @@ export default function Home() {
           body {
             padding: 0;
             margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto,
-              Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue,
-              sans-serif;
+            font-family: 'Georgia', 'Times New Roman', serif;
+            line-height: 1.6;
+            color: #1a1a1a;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
           }
 
           a {
             color: inherit;
             text-decoration: none;
+          }
+
+          button {
+            font-family: inherit;
+          }
+
+          textarea {
+            font-family: inherit;
           }
         `}</style>
       </div>
