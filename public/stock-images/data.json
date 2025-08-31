@@ -1,0 +1,66 @@
+{
+  "people": [
+    {
+      "id": "person-1",
+      "name": "Light Complexion Woman",
+      "image": "https://images.unsplash.com/photo-1494790108755-2616c23dd4f6?w=400&h=600&fit=crop&crop=face",
+      "alt": "Light complexion female model"
+    },
+    {
+      "id": "person-2", 
+      "name": "Medium Complexion Woman",
+      "image": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=600&fit=crop&crop=face",
+      "alt": "Medium complexion female model"
+    },
+    {
+      "id": "person-3",
+      "name": "Dark Complexion Woman", 
+      "image": "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=400&h=600&fit=crop&crop=face",
+      "alt": "Dark complexion female model"
+    },
+    {
+      "id": "person-4",
+      "name": "Asian Woman",
+      "image": "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=400&h=600&fit=crop&crop=face", 
+      "alt": "Asian female model"
+    },
+    {
+      "id": "person-5",
+      "name": "Curly Hair Woman",
+      "image": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&h=600&fit=crop&crop=face",
+      "alt": "Female model with curly hair"
+    }
+  ],
+  "garments": [
+    {
+      "id": "garment-1",
+      "name": "Black Dress",
+      "image": "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400&h=600&fit=crop",
+      "alt": "Black cocktail dress"
+    },
+    {
+      "id": "garment-2",
+      "name": "White Blouse", 
+      "image": "https://images.unsplash.com/photo-1564557287817-3785e38ec1f5?w=400&h=600&fit=crop",
+      "alt": "White silk blouse"
+    },
+    {
+      "id": "garment-3",
+      "name": "Floral Dress",
+      "image": "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=400&h=600&fit=crop", 
+      "alt": "Floral print dress"
+    },
+    {
+      "id": "garment-4",
+      "name": "Blue Blazer",
+      "image": "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400&h=600&fit=crop",
+      "alt": "Navy blue blazer"
+    },
+    {
+      "id": "garment-5", 
+      "name": "Pink Sweater",
+      "image": "https://images.unsplash.com/photo-1583743089695-4b816a340f82?w=400&h=600&fit=crop",
+      "alt": "Pink knit sweater"
+    }
+  ]
+}
