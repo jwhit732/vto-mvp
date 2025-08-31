@@ -66,7 +66,7 @@ async function callGeminiAPI(personBase64: string, garmentBase64: string, person
   
   if (!apiKey) {
     console.error(`[${requestId}] GEMINI_API_KEY not configured`);
-    throw new Error('GEMINI_API_KEY not configured');
+    throw new Error('API key not configured yet - deployment test mode');
   }
 
   console.log(`[${requestId}] API key length: ${apiKey.length}`);
