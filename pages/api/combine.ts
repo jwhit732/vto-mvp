@@ -62,7 +62,7 @@ function validateImage(file: File): { valid: boolean; error?: string } {
 }
 
 async function callGeminiAPI(personBase64: string, garmentBase64: string, personMimeType: string, garmentMimeType: string, customPrompt: string, requestId: string): Promise<string> {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
   
   if (!apiKey) {
     console.error(`[${requestId}] GEMINI_API_KEY not configured`);
