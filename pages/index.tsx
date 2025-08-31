@@ -314,7 +314,7 @@ export default function Home() {
 
           .main-content {
             max-width: 1200px;
-            max-height: 1200px;
+            max-height: 900px;
             margin: 0 auto;
           }
 
@@ -329,7 +329,7 @@ export default function Home() {
             display: flex;
             flex-direction: column;
             gap: 24px;
-            max-height: 800px;
+            max-height: 650px;
           }
 
           .result-column {
@@ -343,8 +343,8 @@ export default function Home() {
             border: 1px solid #e5e7eb;
             transition: all 0.2s ease;
             flex: 1;
-            max-height: 450px;
-            overflow-y: auto;
+            max-height: 300px;
+            overflow: hidden;
           }
 
           .upload-panel:hover {
@@ -382,10 +382,12 @@ export default function Home() {
 
           .upload-area.compact {
             min-height: 140px;
+            max-height: 200px;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 16px;
+            overflow: hidden;
           }
 
           .result-area.large {
@@ -400,8 +402,8 @@ export default function Home() {
 
           .preview-image {
             max-width: 100%;
+            max-height: 120px;
             width: auto;
-            height: auto;
             object-fit: contain;
             border-radius: 4px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -735,8 +737,8 @@ export default function Home() {
 
             .preview-image {
               max-width: 100%;
+              max-height: 100px;
               width: auto;
-              height: auto;
             }
 
             .result-image {
