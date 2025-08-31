@@ -314,7 +314,9 @@ export default function Home() {
 
           .main-content {
             max-width: 1200px;
+            max-height: 600px;
             margin: 0 auto;
+            overflow: hidden;
           }
 
           .layout-container {
@@ -328,6 +330,7 @@ export default function Home() {
             display: flex;
             flex-direction: column;
             gap: 24px;
+            max-height: 400px;
           }
 
           .result-column {
@@ -341,6 +344,8 @@ export default function Home() {
             border: 1px solid #e5e7eb;
             transition: all 0.2s ease;
             flex: 1;
+            max-height: 180px;
+            overflow: hidden;
           }
 
           .upload-panel:hover {
@@ -378,6 +383,8 @@ export default function Home() {
 
           .upload-area.compact {
             min-height: 140px;
+            max-height: 140px;
+            overflow: hidden;
           }
 
           .result-area.large {
