@@ -2,6 +2,8 @@
 
 AI-powered virtual garment try-on using Google Gemini 2.5 Flash Image Preview.
 
+<!-- Test comment for VS Code Git workflow -->
+
 ## Setup
 
 1. Install dependencies:
