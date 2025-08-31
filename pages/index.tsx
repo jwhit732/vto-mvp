@@ -392,7 +392,7 @@ export default function Home() {
 
           .preview-image {
             max-width: 100%;
-            max-height: 100px;
+            max-height: 50px;
             object-fit: contain;
             border-radius: 4px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -479,18 +479,28 @@ export default function Home() {
 
           .download-btn {
             margin-top: 16px;
-            padding: 12px 24px;
-            background: #10b981;
+            background: #1a1a1a;
             color: white;
             border: none;
-            border-radius: 8px;
-            font-weight: 600;
+            padding: 18px 48px;
+            font-size: 1.125rem;
+            font-weight: 400;
+            border-radius: 4px;
             cursor: pointer;
-            transition: background 0.2s ease;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 160px;
+            justify-content: center;
+            font-family: 'Georgia', serif;
+            letter-spacing: 0.02em;
           }
 
           .download-btn:hover {
-            background: #059669;
+            background: #374151;
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
           }
 
           .error-state {
@@ -611,6 +621,8 @@ export default function Home() {
 
           .combine-section {
             text-align: center;
+            margin-top: 20px;
+            margin-bottom: 40px;
           }
 
           .combine-btn {
@@ -713,7 +725,7 @@ export default function Home() {
             }
 
             .preview-image {
-              max-height: 100px;
+              max-height: 50px;
             }
 
             .result-image {
