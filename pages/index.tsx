@@ -1,14 +1,94 @@
 import { useState, useRef } from 'react';
 import Head from 'next/head';
 
+interface StockImage {
+  id: string;
+  name: string;
+  image: string;
+  alt: string;
+}
+
 interface UploadState {
   file: File | null;
   preview: string | null;
 }
 
+interface CarouselState {
+  currentIndex: number;
+  isUsingStock: boolean;
+  stockImages: StockImage[];
+}
+
 type AppState = 'idle' | 'running' | 'success' | 'error';
 
 const DEFAULT_PROMPT = "Blend these two images: Put the garment from the second image onto the person in the first image. Create a realistic virtual try-on by editing the person to wear the garment while maintaining their pose, face, and natural lighting. Generate the final edited image.";
+
+// Stock image data
+const STOCK_PEOPLE: StockImage[] = [
+  {
+    id: "person-1",
+    name: "Light Complexion Model",
+    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop&crop=face",
+    alt: "Light complexion male model in casual wear"
+  },
+  {
+    id: "person-2", 
+    name: "Medium Complexion Model",
+    image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=600&fit=crop&crop=face",
+    alt: "Medium complexion male model"
+  },
+  {
+    id: "person-3",
+    name: "Dark Complexion Model", 
+    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=600&fit=crop&crop=face",
+    alt: "Dark complexion male model"
+  },
+  {
+    id: "person-4",
+    name: "Female Model",
+    image: "https://images.unsplash.com/photo-1494790108755-2616c23dd4f6?w=400&h=600&fit=crop&crop=face", 
+    alt: "Female model"
+  },
+  {
+    id: "person-5",
+    name: "Athletic Build Model",
+    image: "https://images.unsplash.com/photo-1552058544-f2b08422138a?w=400&h=600&fit=crop&crop=face",
+    alt: "Athletic build male model"
+  }
+];
+
+const STOCK_GARMENTS: StockImage[] = [
+  {
+    id: "garment-1",
+    name: "Red Hoodie",
+    image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400&h=600&fit=crop",
+    alt: "Red hooded sweatshirt"
+  },
+  {
+    id: "garment-2",
+    name: "Blue Denim Jacket", 
+    image: "https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=400&h=600&fit=crop",
+    alt: "Blue denim jacket"
+  },
+  {
+    id: "garment-3",
+    name: "Black T-Shirt",
+    image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=600&fit=crop", 
+    alt: "Black cotton t-shirt"
+  },
+  {
+    id: "garment-4",
+    name: "White Button Shirt",
+    image: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400&h=600&fit=crop",
+    alt: "White button-up shirt"
+  },
+  {
+    id: "garment-5", 
+    name: "Gray Sweater",
+    image: "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=400&h=600&fit=crop",
+    alt: "Gray knit sweater"
+  }
+];
 
 export default function Home() {
   const [personState, setPersonState] = useState<UploadState>({ file: null, preview: null });
@@ -20,12 +100,78 @@ export default function Home() {
   const [showPromptEditor, setShowPromptEditor] = useState<boolean>(false);
   const [hasTriedOnce, setHasTriedOnce] = useState<boolean>(false);
 
+  // Carousel states - Initialize with first stock image
+  const [personCarousel, setPersonCarousel] = useState<CarouselState>({
+    currentIndex: 0,
+    isUsingStock: true,
+    stockImages: STOCK_PEOPLE
+  });
+  const [garmentCarousel, setGarmentCarousel] = useState<CarouselState>({
+    currentIndex: 0,
+    isUsingStock: true,
+    stockImages: STOCK_GARMENTS
+  });
+
   const personInputRef = useRef<HTMLInputElement>(null);
   const garmentInputRef = useRef<HTMLInputElement>(null);
 
+  // Carousel navigation handlers
+  const handlePersonCarouselPrev = () => {
+    setPersonCarousel(prev => {
+      const newIndex = prev.currentIndex === 0 ? 5 : prev.currentIndex - 1; // 5 = upload index
+      return {
+        ...prev,
+        currentIndex: newIndex,
+        isUsingStock: newIndex < 5
+      };
+    });
+    // Reset hasTriedOnce when changing images
+    setHasTriedOnce(false);
+  };
+
+  const handlePersonCarouselNext = () => {
+    setPersonCarousel(prev => {
+      const newIndex = prev.currentIndex === 5 ? 0 : prev.currentIndex + 1; // 5 = upload index
+      return {
+        ...prev,
+        currentIndex: newIndex,
+        isUsingStock: newIndex < 5
+      };
+    });
+    // Reset hasTriedOnce when changing images
+    setHasTriedOnce(false);
+  };
+
+  const handleGarmentCarouselPrev = () => {
+    setGarmentCarousel(prev => {
+      const newIndex = prev.currentIndex === 0 ? 5 : prev.currentIndex - 1; // 5 = upload index
+      return {
+        ...prev,
+        currentIndex: newIndex,
+        isUsingStock: newIndex < 5
+      };
+    });
+    // Reset hasTriedOnce when changing images
+    setHasTriedOnce(false);
+  };
+
+  const handleGarmentCarouselNext = () => {
+    setGarmentCarousel(prev => {
+      const newIndex = prev.currentIndex === 5 ? 0 : prev.currentIndex + 1; // 5 = upload index
+      return {
+        ...prev,
+        currentIndex: newIndex,
+        isUsingStock: newIndex < 5
+      };
+    });
+    // Reset hasTriedOnce when changing images
+    setHasTriedOnce(false);
+  };
+
   const handleFileUpload = (
     event: React.ChangeEvent<HTMLInputElement>,
-    setState: React.Dispatch<React.SetStateAction<UploadState>>
+    setState: React.Dispatch<React.SetStateAction<UploadState>>,
+    setCarouselState: React.Dispatch<React.SetStateAction<CarouselState>>
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -56,6 +202,12 @@ export default function Home() {
         file,
         preview: e.target?.result as string
       });
+      // Set carousel to upload mode (index 5)
+      setCarouselState(prev => ({
+        ...prev,
+        currentIndex: 5,
+        isUsingStock: false
+      }));
       if (appState === 'error') {
         setAppState('idle');
         setErrorMessage('');
@@ -66,9 +218,35 @@ export default function Home() {
     reader.readAsDataURL(file);
   };
 
+  // Helper function to get current image data
+  const getCurrentImage = (carousel: CarouselState, uploadState: UploadState): { url: string; isStock: boolean } => {
+    if (carousel.isUsingStock && carousel.currentIndex < carousel.stockImages.length) {
+      return {
+        url: carousel.stockImages[carousel.currentIndex].image,
+        isStock: true
+      };
+    } else if (uploadState.preview) {
+      return {
+        url: uploadState.preview,
+        isStock: false
+      };
+    }
+    return { url: '', isStock: false };
+  };
+
+  // Helper function to convert URL to File object for stock images
+  const urlToFile = async (url: string, filename: string, mimeType: string): Promise<File> => {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new File([blob], filename, { type: mimeType });
+  };
+
   const handleCombine = async () => {
-    if (!personState.file || !garmentState.file) {
-      setErrorMessage('Please upload both person and garment images.');
+    const personImage = getCurrentImage(personCarousel, personState);
+    const garmentImage = getCurrentImage(garmentCarousel, garmentState);
+
+    if (!personImage.url || !garmentImage.url) {
+      setErrorMessage('Please select both person and garment images.');
       setAppState('error');
       return;
     }
@@ -79,8 +257,25 @@ export default function Home() {
 
     try {
       const formData = new FormData();
-      formData.append('person', personState.file);
-      formData.append('garment', garmentState.file);
+      
+      // Handle person image (stock or uploaded)
+      let personFile: File;
+      if (personImage.isStock) {
+        personFile = await urlToFile(personImage.url, 'person-stock.jpg', 'image/jpeg');
+      } else {
+        personFile = personState.file!;
+      }
+      
+      // Handle garment image (stock or uploaded)
+      let garmentFile: File;
+      if (garmentImage.isStock) {
+        garmentFile = await urlToFile(garmentImage.url, 'garment-stock.jpg', 'image/jpeg');
+      } else {
+        garmentFile = garmentState.file!;
+      }
+
+      formData.append('person', personFile);
+      formData.append('garment', garmentFile);
       formData.append('prompt', customPrompt.trim() || DEFAULT_PROMPT);
 
       const response = await fetch('/api/combine', {
@@ -115,7 +310,11 @@ export default function Home() {
     document.body.removeChild(link);
   };
 
-  const canCombine = personState.file && garmentState.file && appState !== 'running';
+  const canCombine = (() => {
+    const personImage = getCurrentImage(personCarousel, personState);
+    const garmentImage = getCurrentImage(garmentCarousel, garmentState);
+    return personImage.url && garmentImage.url && appState !== 'running';
+  })();
 
   return (
     <>
@@ -157,56 +356,126 @@ export default function Home() {
             <div className="inputs-column">
               {/* Person Upload Panel */}
               <div className="upload-panel">
-                <h2>Person Photo</h2>
-                <div 
-                  className="upload-area compact"
-                  onClick={() => personInputRef.current?.click()}
-                >
-                  {personState.preview ? (
-                    <img src={personState.preview} alt="Person preview" className="preview-image" />
-                  ) : (
-                    <div className="upload-placeholder">
-                      <div className="upload-icon">👤</div>
-                      <p>Click to upload person photo</p>
-                      <small>JPG, PNG • Max 4MB</small>
+                <div className="carousel-header">
+                  <h2>Person Photo</h2>
+                  <div className="carousel-nav">
+                    <button 
+                      className="carousel-arrow" 
+                      onClick={handlePersonCarouselPrev}
+                      aria-label="Previous person"
+                    >
+                      ←
+                    </button>
+                    <button 
+                      className="carousel-arrow" 
+                      onClick={handlePersonCarouselNext}
+                      aria-label="Next person"
+                    >
+                      →
+                    </button>
+                  </div>
+                </div>
+                <div className="upload-area compact">
+                  {personCarousel.currentIndex === 5 ? (
+                    // Upload interface
+                    <div 
+                      className="upload-content"
+                      onClick={() => personInputRef.current?.click()}
+                    >
+                      {personState.preview ? (
+                        <img src={personState.preview} alt="Person preview" className="preview-image" />
+                      ) : (
+                        <div className="upload-placeholder">
+                          <div className="upload-icon">👤</div>
+                          <p>Click to upload person photo</p>
+                          <small>JPG, PNG • Max 4MB</small>
+                        </div>
+                      )}
                     </div>
+                  ) : (
+                    // Stock image
+                    <img 
+                      src={personCarousel.stockImages[personCarousel.currentIndex].image} 
+                      alt={personCarousel.stockImages[personCarousel.currentIndex].alt}
+                      className="preview-image" 
+                    />
                   )}
                 </div>
                 <input
                   ref={personInputRef}
                   type="file"
                   accept=".jpg,.jpeg,.png"
-                  onChange={(e) => handleFileUpload(e, setPersonState)}
+                  onChange={(e) => handleFileUpload(e, setPersonState, setPersonCarousel)}
                   style={{ display: 'none' }}
                 />
-                <small className="hint">Single subject, torso visible, arms not crossed</small>
+                <small className="hint">
+                  {personCarousel.currentIndex === 5 ? 
+                    'Single subject, torso visible, arms not crossed' : 
+                    personCarousel.stockImages[personCarousel.currentIndex].name
+                  }
+                </small>
               </div>
 
               {/* Garment Upload Panel */}
               <div className="upload-panel">
-                <h2>Garment Image</h2>
-                <div 
-                  className="upload-area compact"
-                  onClick={() => garmentInputRef.current?.click()}
-                >
-                  {garmentState.preview ? (
-                    <img src={garmentState.preview} alt="Garment preview" className="preview-image" />
-                  ) : (
-                    <div className="upload-placeholder">
-                      <div className="upload-icon">👕</div>
-                      <p>Click to upload garment</p>
-                      <small>JPG, PNG • Max 4MB</small>
+                <div className="carousel-header">
+                  <h2>Garment Image</h2>
+                  <div className="carousel-nav">
+                    <button 
+                      className="carousel-arrow" 
+                      onClick={handleGarmentCarouselPrev}
+                      aria-label="Previous garment"
+                    >
+                      ←
+                    </button>
+                    <button 
+                      className="carousel-arrow" 
+                      onClick={handleGarmentCarouselNext}
+                      aria-label="Next garment"
+                    >
+                      →
+                    </button>
+                  </div>
+                </div>
+                <div className="upload-area compact">
+                  {garmentCarousel.currentIndex === 5 ? (
+                    // Upload interface
+                    <div 
+                      className="upload-content"
+                      onClick={() => garmentInputRef.current?.click()}
+                    >
+                      {garmentState.preview ? (
+                        <img src={garmentState.preview} alt="Garment preview" className="preview-image" />
+                      ) : (
+                        <div className="upload-placeholder">
+                          <div className="upload-icon">👕</div>
+                          <p>Click to upload garment</p>
+                          <small>JPG, PNG • Max 4MB</small>
+                        </div>
+                      )}
                     </div>
+                  ) : (
+                    // Stock image
+                    <img 
+                      src={garmentCarousel.stockImages[garmentCarousel.currentIndex].image} 
+                      alt={garmentCarousel.stockImages[garmentCarousel.currentIndex].alt}
+                      className="preview-image" 
+                    />
                   )}
                 </div>
                 <input
                   ref={garmentInputRef}
                   type="file"
                   accept=".jpg,.jpeg,.png"
-                  onChange={(e) => handleFileUpload(e, setGarmentState)}
+                  onChange={(e) => handleFileUpload(e, setGarmentState, setGarmentCarousel)}
                   style={{ display: 'none' }}
                 />
-                <small className="hint">Flat-lay product image on plain background works best</small>
+                <small className="hint">
+                  {garmentCarousel.currentIndex === 5 ? 
+                    'Flat-lay product image on plain background works best' : 
+                    garmentCarousel.stockImages[garmentCarousel.currentIndex].name
+                  }
+                </small>
               </div>
             </div>
 
@@ -363,6 +632,48 @@ export default function Home() {
             color: #1a1a1a;
             font-family: 'Playfair Display', 'Georgia', serif;
             letter-spacing: -0.01em;
+          }
+
+          .carousel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+          }
+
+          .carousel-nav {
+            display: flex;
+            gap: 8px;
+          }
+
+          .carousel-arrow {
+            background: #f8f9fa;
+            border: 1px solid #e1e5e9;
+            border-radius: 4px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+            color: #374151;
+          }
+
+          .carousel-arrow:hover {
+            background: #e9ecef;
+            border-color: #d1d5db;
+            color: #1a1a1a;
+          }
+
+          .upload-content {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
           }
 
           .upload-area, .result-area {

@@ -1,0 +1,66 @@
+{
+  "people": [
+    {
+      "id": "person-1",
+      "name": "Light Complexion Model",
+      "image": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop&crop=face",
+      "alt": "Light complexion male model in casual wear"
+    },
+    {
+      "id": "person-2", 
+      "name": "Medium Complexion Model",
+      "image": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=600&fit=crop&crop=face",
+      "alt": "Medium complexion male model"
+    },
+    {
+      "id": "person-3",
+      "name": "Dark Complexion Model", 
+      "image": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=600&fit=crop&crop=face",
+      "alt": "Dark complexion male model"
+    },
+    {
+      "id": "person-4",
+      "name": "Female Model",
+      "image": "https://images.unsplash.com/photo-1494790108755-2616c23dd4f6?w=400&h=600&fit=crop&crop=face", 
+      "alt": "Female model"
+    },
+    {
+      "id": "person-5",
+      "name": "Athletic Build Model",
+      "image": "https://images.unsplash.com/photo-1552058544-f2b08422138a?w=400&h=600&fit=crop&crop=face",
+      "alt": "Athletic build male model"
+    }
+  ],
+  "garments": [
+    {
+      "id": "garment-1",
+      "name": "Red Hoodie",
+      "image": "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400&h=600&fit=crop",
+      "alt": "Red hooded sweatshirt"
+    },
+    {
+      "id": "garment-2",
+      "name": "Blue Denim Jacket", 
+      "image": "https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=400&h=600&fit=crop",
+      "alt": "Blue denim jacket"
+    },
+    {
+      "id": "garment-3",
+      "name": "Black T-Shirt",
+      "image": "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=600&fit=crop", 
+      "alt": "Black cotton t-shirt"
+    },
+    {
+      "id": "garment-4",
+      "name": "White Button Shirt",
+      "image": "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400&h=600&fit=crop",
+      "alt": "White button-up shirt"
+    },
+    {
+      "id": "garment-5", 
+      "name": "Gray Sweater",
+      "image": "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=400&h=600&fit=crop",
+      "alt": "Gray knit sweater"
+    }
+  ]
+}
