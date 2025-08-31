@@ -18,6 +18,7 @@ export default function Home() {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [customPrompt, setCustomPrompt] = useState<string>(DEFAULT_PROMPT);
   const [showPromptEditor, setShowPromptEditor] = useState<boolean>(false);
+  const [hasTriedOnce, setHasTriedOnce] = useState<boolean>(false);
 
   const personInputRef = useRef<HTMLInputElement>(null);
   const garmentInputRef = useRef<HTMLInputElement>(null);
@@ -59,6 +60,8 @@ export default function Home() {
         setAppState('idle');
         setErrorMessage('');
       }
+      // Reset button text when images change
+      setHasTriedOnce(false);
     };
     reader.readAsDataURL(file);
   };
@@ -93,6 +96,7 @@ export default function Home() {
 
       setResultImage(`data:image/png;base64,${result.image}`);
       setAppState('success');
+      setHasTriedOnce(true);
     } catch (error) {
       console.error('Combine error:', error);
       setErrorMessage(error instanceof Error ? error.message : 'An unexpected error occurred');
@@ -129,6 +133,23 @@ export default function Home() {
           <h1>Virtual Try-On</h1>
           <p>Upload a person photo and garment image to see how they look together</p>
         </header>
+
+        <div className="combine-section">
+          <button 
+            onClick={handleCombine}
+            disabled={!canCombine}
+            className={`combine-btn ${!canCombine ? 'disabled' : ''}`}
+          >
+            {appState === 'running' ? (
+              <>
+                <span className="btn-spinner"></span>
+                Trying on...
+              </>
+            ) : (
+              hasTriedOnce ? 'Try Again?' : 'Try It On'
+            )}
+          </button>
+        </div>
 
         <main className="main-content">
           <div className="layout-container">
@@ -257,22 +278,6 @@ export default function Home() {
             )}
           </div>
 
-          <div className="combine-section">
-            <button 
-              onClick={handleCombine}
-              disabled={!canCombine}
-              className={`combine-btn ${!canCombine ? 'disabled' : ''}`}
-            >
-              {appState === 'running' ? (
-                <>
-                  <span className="btn-spinner"></span>
-                  Combining...
-                </>
-              ) : (
-                'Combine'
-              )}
-            </button>
-          </div>
         </main>
 
         <style jsx>{`
@@ -372,7 +377,7 @@ export default function Home() {
           }
 
           .upload-area.compact {
-            min-height: 200px;
+            min-height: 140px;
           }
 
           .result-area.large {
@@ -387,7 +392,7 @@ export default function Home() {
 
           .preview-image {
             max-width: 100%;
-            max-height: 180px;
+            max-height: 100px;
             object-fit: contain;
             border-radius: 4px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -700,7 +705,7 @@ export default function Home() {
             }
 
             .upload-area.compact {
-              min-height: 180px;
+              min-height: 120px;
             }
 
             .result-area.large {
@@ -708,7 +713,7 @@ export default function Home() {
             }
 
             .preview-image {
-              max-height: 140px;
+              max-height: 100px;
             }
 
             .result-image {
