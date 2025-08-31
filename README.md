@@ -3,7 +3,7 @@
 AI-powered virtual garment try-on using Google Gemini 2.5 Flash Image Preview.
 
 <!-- Test comment for VS Code Git workflow -->
-<!-- Environment variables configured - ready for deployment -->
+<!-- Environment variables updated - triggering fresh deployment -->
 
 ## Setup
 
