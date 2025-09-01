@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Head from 'next/head';
 
 interface StockImage {
@@ -23,73 +23,6 @@ type AppState = 'idle' | 'running' | 'success' | 'error';
 
 const DEFAULT_PROMPT = "Blend these two images: Put the garment from the second image onto the person in the first image. Create a realistic virtual try-on by editing the person to wear the garment while maintaining their pose, face, and natural lighting. Generate the final edited image.";
 
-// Stock image data
-const STOCK_PEOPLE: StockImage[] = [
-  {
-    id: "person-1",
-    name: "Light Complexion Woman",
-    image: "https://images.unsplash.com/photo-1494790108755-2616c23dd4f6?w=400&h=600&fit=crop&crop=face",
-    alt: "Light complexion female model"
-  },
-  {
-    id: "person-2", 
-    name: "Medium Complexion Woman",
-    image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=600&fit=crop&crop=face",
-    alt: "Medium complexion female model"
-  },
-  {
-    id: "person-3",
-    name: "Dark Complexion Woman", 
-    image: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=400&h=600&fit=crop&crop=face",
-    alt: "Dark complexion female model"
-  },
-  {
-    id: "person-4",
-    name: "Asian Woman",
-    image: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=400&h=600&fit=crop&crop=face", 
-    alt: "Asian female model"
-  },
-  {
-    id: "person-5",
-    name: "Curly Hair Woman",
-    image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&h=600&fit=crop&crop=face",
-    alt: "Female model with curly hair"
-  }
-];
-
-const STOCK_GARMENTS: StockImage[] = [
-  {
-    id: "garment-1",
-    name: "Black Dress",
-    image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400&h=600&fit=crop",
-    alt: "Black cocktail dress"
-  },
-  {
-    id: "garment-2",
-    name: "White Blouse", 
-    image: "https://images.unsplash.com/photo-1564557287817-3785e38ec1f5?w=400&h=600&fit=crop",
-    alt: "White silk blouse"
-  },
-  {
-    id: "garment-3",
-    name: "Floral Dress",
-    image: "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=400&h=600&fit=crop", 
-    alt: "Floral print dress"
-  },
-  {
-    id: "garment-4",
-    name: "Blue Blazer",
-    image: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400&h=600&fit=crop",
-    alt: "Navy blue blazer"
-  },
-  {
-    id: "garment-5", 
-    name: "Pink Sweater",
-    image: "https://images.unsplash.com/photo-1583743089695-4b816a340f82?w=400&h=600&fit=crop",
-    alt: "Pink knit sweater"
-  }
-];
-
 export default function Home() {
   const [personState, setPersonState] = useState<UploadState>({ file: null, preview: null });
   const [garmentState, setGarmentState] = useState<UploadState>({ file: null, preview: null });
@@ -99,30 +32,53 @@ export default function Home() {
   const [customPrompt, setCustomPrompt] = useState<string>(DEFAULT_PROMPT);
   const [showPromptEditor, setShowPromptEditor] = useState<boolean>(false);
   const [hasTriedOnce, setHasTriedOnce] = useState<boolean>(false);
+  const [stockPeople, setStockPeople] = useState<StockImage[]>([]);
+  const [stockGarments, setStockGarments] = useState<StockImage[]>([]);
 
   // Carousel states - Initialize with first stock image
   const [personCarousel, setPersonCarousel] = useState<CarouselState>({
     currentIndex: 0,
     isUsingStock: true,
-    stockImages: STOCK_PEOPLE
+    stockImages: []
   });
   const [garmentCarousel, setGarmentCarousel] = useState<CarouselState>({
     currentIndex: 0,
     isUsingStock: true,
-    stockImages: STOCK_GARMENTS
+    stockImages: []
   });
 
   const personInputRef = useRef<HTMLInputElement>(null);
   const garmentInputRef = useRef<HTMLInputElement>(null);
 
+  // Load stock images from JSON file
+  useEffect(() => {
+    const loadStockImages = async () => {
+      try {
+        const response = await fetch('/stock-images/data.json');
+        const data = await response.json();
+        setStockPeople(data.people);
+        setStockGarments(data.garments);
+        
+        // Update carousel states with loaded data
+        setPersonCarousel(prev => ({ ...prev, stockImages: data.people }));
+        setGarmentCarousel(prev => ({ ...prev, stockImages: data.garments }));
+      } catch (error) {
+        console.error('Failed to load stock images:', error);
+      }
+    };
+
+    loadStockImages();
+  }, []);
+
   // Carousel navigation handlers
   const handlePersonCarouselPrev = () => {
     setPersonCarousel(prev => {
-      const newIndex = prev.currentIndex === 0 ? 5 : prev.currentIndex - 1; // 5 = upload index
+      const uploadIndex = prev.stockImages.length;
+      const newIndex = prev.currentIndex === 0 ? uploadIndex : prev.currentIndex - 1;
       return {
         ...prev,
         currentIndex: newIndex,
-        isUsingStock: newIndex < 5
+        isUsingStock: newIndex < uploadIndex
       };
     });
     // Reset hasTriedOnce when changing images
@@ -131,11 +87,12 @@ export default function Home() {
 
   const handlePersonCarouselNext = () => {
     setPersonCarousel(prev => {
-      const newIndex = prev.currentIndex === 5 ? 0 : prev.currentIndex + 1; // 5 = upload index
+      const uploadIndex = prev.stockImages.length;
+      const newIndex = prev.currentIndex === uploadIndex ? 0 : prev.currentIndex + 1;
       return {
         ...prev,
         currentIndex: newIndex,
-        isUsingStock: newIndex < 5
+        isUsingStock: newIndex < uploadIndex
       };
     });
     // Reset hasTriedOnce when changing images
@@ -144,11 +101,12 @@ export default function Home() {
 
   const handleGarmentCarouselPrev = () => {
     setGarmentCarousel(prev => {
-      const newIndex = prev.currentIndex === 0 ? 5 : prev.currentIndex - 1; // 5 = upload index
+      const uploadIndex = prev.stockImages.length;
+      const newIndex = prev.currentIndex === 0 ? uploadIndex : prev.currentIndex - 1;
       return {
         ...prev,
         currentIndex: newIndex,
-        isUsingStock: newIndex < 5
+        isUsingStock: newIndex < uploadIndex
       };
     });
     // Reset hasTriedOnce when changing images
@@ -157,11 +115,12 @@ export default function Home() {
 
   const handleGarmentCarouselNext = () => {
     setGarmentCarousel(prev => {
-      const newIndex = prev.currentIndex === 5 ? 0 : prev.currentIndex + 1; // 5 = upload index
+      const uploadIndex = prev.stockImages.length;
+      const newIndex = prev.currentIndex === uploadIndex ? 0 : prev.currentIndex + 1;
       return {
         ...prev,
         currentIndex: newIndex,
-        isUsingStock: newIndex < 5
+        isUsingStock: newIndex < uploadIndex
       };
     });
     // Reset hasTriedOnce when changing images
@@ -202,10 +161,10 @@ export default function Home() {
         file,
         preview: e.target?.result as string
       });
-      // Set carousel to upload mode (index 5)
+      // Set carousel to upload mode (last index after stock images)
       setCarouselState(prev => ({
         ...prev,
-        currentIndex: 5,
+        currentIndex: prev.stockImages.length,
         isUsingStock: false
       }));
       if (appState === 'error') {
@@ -376,7 +335,7 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="upload-area compact">
-                  {personCarousel.currentIndex === 5 ? (
+                  {personCarousel.currentIndex === personCarousel.stockImages.length ? (
                     // Upload interface
                     <div 
                       className="upload-content"
@@ -409,9 +368,9 @@ export default function Home() {
                   style={{ display: 'none' }}
                 />
                 <small className="hint">
-                  {personCarousel.currentIndex === 5 ? 
+                  {personCarousel.currentIndex === personCarousel.stockImages.length ? 
                     'Single subject, torso visible, arms not crossed' : 
-                    personCarousel.stockImages[personCarousel.currentIndex].name
+                    personCarousel.stockImages[personCarousel.currentIndex]?.name
                   }
                 </small>
               </div>
@@ -438,7 +397,7 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="upload-area compact">
-                  {garmentCarousel.currentIndex === 5 ? (
+                  {garmentCarousel.currentIndex === garmentCarousel.stockImages.length ? (
                     // Upload interface
                     <div 
                       className="upload-content"
@@ -471,9 +430,9 @@ export default function Home() {
                   style={{ display: 'none' }}
                 />
                 <small className="hint">
-                  {garmentCarousel.currentIndex === 5 ? 
+                  {garmentCarousel.currentIndex === garmentCarousel.stockImages.length ? 
                     'Flat-lay product image on plain background works best' : 
-                    garmentCarousel.stockImages[garmentCarousel.currentIndex].name
+                    garmentCarousel.stockImages[garmentCarousel.currentIndex]?.name
                   }
                 </small>
               </div>
