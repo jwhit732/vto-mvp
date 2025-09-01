@@ -3,7 +3,7 @@
     {
       "id": "person-1",
       "name": "Light Complexion Woman",
-      "image": "https://images.unsplash.com/photo-1494790108755-2616c23dd4f6?w=400&h=600&fit=crop&crop=face",
+      "image": "https://plus.unsplash.com/premium_photo-1669704098876-2a38eb10e56a?w=400&h=600&fit=crop&crop=face", 
       "alt": "Light complexion female model"
     },
     {
@@ -34,32 +34,32 @@
   "garments": [
     {
       "id": "garment-1",
-      "name": "Black Dress",
-      "image": "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400&h=600&fit=crop",
-      "alt": "Black cocktail dress"
+      "name": "Black Top",
+      "image": "https://www.yoox.com/images/items/14/14480880DN_14_f.jpg?impolicy=crop&width=387&height=490",
+      "alt": "Black Top"
     },
     {
       "id": "garment-2",
-      "name": "White Blouse", 
+      "name": "Grey Hoodie", 
       "image": "https://images.unsplash.com/photo-1564557287817-3785e38ec1f5?w=400&h=600&fit=crop",
-      "alt": "White silk blouse"
+      "alt": "Grey Hoodie"
     },
     {
       "id": "garment-3",
-      "name": "Floral Dress",
+      "name": "White Dress",
       "image": "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=400&h=600&fit=crop", 
-      "alt": "Floral print dress"
+      "alt": "White Dress"
     },
     {
       "id": "garment-4",
       "name": "Blue Blazer",
-      "image": "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400&h=600&fit=crop",
+      "image": "https://m.media-amazon.com/images/I/31Oxi9LcBpL._SY1000_.jpg",
       "alt": "Navy blue blazer"
     },
     {
       "id": "garment-5", 
-      "name": "Pink Sweater",
-      "image": "https://images.unsplash.com/photo-1583743089695-4b816a340f82?w=400&h=600&fit=crop",
+      "name": "Woolen Sweater",
+      "image": "https://www.shutterstock.com/image-vector/flat-vector-cartoon-illustration-cozy-600nw-1963803451.jpg",
       "alt": "Pink knit sweater"
     }
   ]
