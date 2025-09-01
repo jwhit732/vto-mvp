@@ -20,6 +20,7 @@ interface CarouselState {
 }
 
 type AppState = 'idle' | 'running' | 'success' | 'error';
+type LayoutMode = 'input-focus' | 'result-focus';
 
 const DEFAULT_PROMPT = "Blend these two images: Put the garment from the second image onto the person in the first image. Create a realistic virtual try-on by editing the person to wear the garment while maintaining their pose, face, and natural lighting. Generate the final edited image.";
 
@@ -34,6 +35,10 @@ export default function Home() {
   const [hasTriedOnce, setHasTriedOnce] = useState<boolean>(false);
   const [stockPeople, setStockPeople] = useState<StockImage[]>([]);
   const [stockGarments, setStockGarments] = useState<StockImage[]>([]);
+  const [layoutMode, setLayoutMode] = useState<LayoutMode>('input-focus');
+  const [showFullScreen, setShowFullScreen] = useState<boolean>(false);
+  const [loadingMessages, setLoadingMessages] = useState<string[]>([]);
+  const [currentMessageIndex, setCurrentMessageIndex] = useState<number>(0);
 
   // Carousel states - Initialize with first stock image
   const [personCarousel, setPersonCarousel] = useState<CarouselState>({
@@ -50,25 +55,48 @@ export default function Home() {
   const personInputRef = useRef<HTMLInputElement>(null);
   const garmentInputRef = useRef<HTMLInputElement>(null);
 
-  // Load stock images from JSON file
+  // Load stock images and loading messages from JSON files
   useEffect(() => {
-    const loadStockImages = async () => {
+    const loadData = async () => {
       try {
-        const response = await fetch('/stock-images/data.json');
-        const data = await response.json();
-        setStockPeople(data.people);
-        setStockGarments(data.garments);
+        // Load stock images
+        const stockResponse = await fetch('/stock-images/data.json');
+        const stockData = await stockResponse.json();
+        setStockPeople(stockData.people);
+        setStockGarments(stockData.garments);
         
         // Update carousel states with loaded data
-        setPersonCarousel(prev => ({ ...prev, stockImages: data.people }));
-        setGarmentCarousel(prev => ({ ...prev, stockImages: data.garments }));
+        setPersonCarousel(prev => ({ ...prev, stockImages: stockData.people }));
+        setGarmentCarousel(prev => ({ ...prev, stockImages: stockData.garments }));
+
+        // Load loading messages
+        const messagesResponse = await fetch('/loading-messages/messages.json');
+        const messagesData = await messagesResponse.json();
+        setLoadingMessages(messagesData.messages.map((msg: any) => msg.text));
       } catch (error) {
-        console.error('Failed to load stock images:', error);
+        console.error('Failed to load data:', error);
       }
     };
 
-    loadStockImages();
+    loadData();
   }, []);
+
+  // Handle loading message rotation
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (appState === 'running' && loadingMessages.length > 0) {
+      interval = setInterval(() => {
+        setCurrentMessageIndex(prev => (prev + 1) % loadingMessages.length);
+      }, 3500); // Change message every 3.5 seconds
+    }
+
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [appState, loadingMessages.length]);
 
   // Carousel navigation handlers
   const handlePersonCarouselPrev = () => {
@@ -81,8 +109,9 @@ export default function Home() {
         isUsingStock: newIndex < uploadIndex
       };
     });
-    // Reset hasTriedOnce when changing images
+    // Reset hasTriedOnce when changing images and return to input focus
     setHasTriedOnce(false);
+    setLayoutMode('input-focus');
   };
 
   const handlePersonCarouselNext = () => {
@@ -95,8 +124,9 @@ export default function Home() {
         isUsingStock: newIndex < uploadIndex
       };
     });
-    // Reset hasTriedOnce when changing images
+    // Reset hasTriedOnce when changing images and return to input focus
     setHasTriedOnce(false);
+    setLayoutMode('input-focus');
   };
 
   const handleGarmentCarouselPrev = () => {
@@ -109,8 +139,9 @@ export default function Home() {
         isUsingStock: newIndex < uploadIndex
       };
     });
-    // Reset hasTriedOnce when changing images
+    // Reset hasTriedOnce when changing images and return to input focus
     setHasTriedOnce(false);
+    setLayoutMode('input-focus');
   };
 
   const handleGarmentCarouselNext = () => {
@@ -123,8 +154,9 @@ export default function Home() {
         isUsingStock: newIndex < uploadIndex
       };
     });
-    // Reset hasTriedOnce when changing images
+    // Reset hasTriedOnce when changing images and return to input focus
     setHasTriedOnce(false);
+    setLayoutMode('input-focus');
   };
 
   const handleFileUpload = (
@@ -195,12 +227,67 @@ export default function Home() {
 
   // Helper function to convert URL to File object for stock images
   const urlToFile = async (url: string, filename: string, mimeType: string): Promise<File> => {
-    const response = await fetch(url);
-    const blob = await response.blob();
-    return new File([blob], filename, { type: mimeType });
+    try {
+      // Use our server-side proxy to avoid CORS issues
+      const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(url)}`;
+      const response = await fetch(proxyUrl);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image: ${response.status}`);
+      }
+      
+      const blob = await response.blob();
+      return new File([blob], filename, { type: mimeType });
+    } catch (error) {
+      console.error(`Error fetching ${url}:`, error);
+      
+      // Create a solid colored placeholder instead of trying canvas
+      const canvas = document.createElement('canvas');
+      canvas.width = 400;
+      canvas.height = 600;
+      const ctx = canvas.getContext('2d');
+      
+      if (ctx) {
+        // Create a gradient background
+        const gradient = ctx.createLinearGradient(0, 0, 400, 600);
+        gradient.addColorStop(0, '#f8f9fa');
+        gradient.addColorStop(1, '#e9ecef');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 400, 600);
+        
+        // Add text
+        ctx.fillStyle = '#6c757d';
+        ctx.font = 'bold 20px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Image Unavailable', 200, 280);
+        ctx.font = '14px Arial';
+        ctx.fillText('Please upload your own image', 200, 320);
+      }
+      
+      return new Promise((resolve) => {
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve(new File([blob], filename, { type: 'image/png' }));
+          } else {
+            // Final fallback - create a simple blob
+            const fallbackBlob = new Blob(['placeholder'], { type: 'text/plain' });
+            resolve(new File([fallbackBlob], filename, { type: 'text/plain' }));
+          }
+        }, 'image/png', 0.8);
+      });
+    }
   };
 
   const handleCombine = async () => {
+    // If this is a "try again" click, reset to initial layout first
+    if (hasTriedOnce) {
+      setLayoutMode('input-focus');
+      setResultImage(null);
+      setHasTriedOnce(false);
+      setAppState('idle');
+      return;
+    }
+
     const personImage = getCurrentImage(personCarousel, personState);
     const garmentImage = getCurrentImage(garmentCarousel, garmentState);
 
@@ -213,11 +300,12 @@ export default function Home() {
     setAppState('running');
     setErrorMessage('');
     setResultImage(null);
+    setLayoutMode('result-focus'); // Switch to result layout immediately
 
     try {
       const formData = new FormData();
       
-      // Handle person image (stock or uploaded)
+      // Handle person image (should be uploaded file now)
       let personFile: File;
       if (personImage.isStock) {
         personFile = await urlToFile(personImage.url, 'person-stock.jpg', 'image/jpeg');
@@ -225,7 +313,7 @@ export default function Home() {
         personFile = personState.file!;
       }
       
-      // Handle garment image (stock or uploaded)
+      // Handle garment image (should be uploaded file now)
       let garmentFile: File;
       if (garmentImage.isStock) {
         garmentFile = await urlToFile(garmentImage.url, 'garment-stock.jpg', 'image/jpeg');
@@ -269,6 +357,16 @@ export default function Home() {
     document.body.removeChild(link);
   };
 
+  const handleResultClick = () => {
+    if (resultImage) {
+      setShowFullScreen(true);
+    }
+  };
+
+  const handleFullScreenClose = () => {
+    setShowFullScreen(false);
+  };
+
   const canCombine = (() => {
     const personImage = getCurrentImage(personCarousel, personState);
     const garmentImage = getCurrentImage(garmentCarousel, garmentState);
@@ -289,7 +387,7 @@ export default function Home() {
       <div className="container">
         <header>
           <h1>Virtual Try-On</h1>
-          <p>Upload a person photo and garment image to see how they look together</p>
+          <p>Try combining a model and a garment, or upload your own</p>
         </header>
 
         <div className="combine-section">
@@ -307,10 +405,15 @@ export default function Home() {
               hasTriedOnce ? 'Try Again?' : 'Try It On'
             )}
           </button>
+          {resultImage && (
+            <button onClick={handleDownload} className="download-btn">
+              Save Result?
+            </button>
+          )}
         </div>
 
         <main className="main-content">
-          <div className="layout-container">
+          <div className={`layout-container ${layoutMode}`}>
             {/* Left Column - Input Images */}
             <div className="inputs-column">
               {/* Person Upload Panel */}
@@ -438,8 +541,9 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Right Column - Result */}
-            <div className="result-column">
+            {/* Right Column - Result (only show when needed) */}
+            {(appState !== 'idle') && (
+              <div className="result-column">
               <div className="upload-panel result-panel">
                 <h2>Result</h2>
                 <div className="result-area large">
@@ -447,15 +551,20 @@ export default function Home() {
                     <div className="loading">
                       <div className="spinner"></div>
                       <p>Creating your try-on...</p>
-                      <small>This may take up to 60 seconds</small>
+                      <small className="loading-message">
+                        {loadingMessages.length > 0 ? loadingMessages[currentMessageIndex] : 'This may take up to 60 seconds'}
+                      </small>
                     </div>
                   )}
                   {appState === 'success' && resultImage && (
                     <div className="result-success">
-                      <img src={resultImage} alt="Virtual try-on result" className="result-image" />
-                      <button onClick={handleDownload} className="download-btn">
-                        Download PNG
-                      </button>
+                      <img 
+                        src={resultImage} 
+                        alt="Virtual try-on result" 
+                        className="result-image clickable" 
+                        onClick={handleResultClick}
+                        title="Click to view full screen"
+                      />
                     </div>
                   )}
                   {appState === 'error' && (
@@ -472,7 +581,8 @@ export default function Home() {
                   )}
                 </div>
               </div>
-            </div>
+              </div>
+            )}
           </div>
 
           <div className="prompt-section">
@@ -507,6 +617,16 @@ export default function Home() {
           </div>
 
         </main>
+
+        {/* Full Screen Modal */}
+        {showFullScreen && resultImage && (
+          <div className="fullscreen-modal" onClick={handleFullScreenClose}>
+            <div className="fullscreen-content">
+              <button className="close-button" onClick={handleFullScreenClose}>×</button>
+              <img src={resultImage} alt="Virtual try-on result - Full screen" className="fullscreen-image" />
+            </div>
+          </div>
+        )}
 
         <style jsx>{`
           .container {
@@ -548,14 +668,46 @@ export default function Home() {
 
           .layout-container {
             display: grid;
-            grid-template-columns: 400px 1fr;
             gap: 48px;
             margin-bottom: 48px;
+            transition: all 0.5s ease;
+          }
+
+          .layout-container.input-focus {
+            grid-template-columns: 1fr;
+            max-width: 900px;
+            margin: 0 auto 48px;
+          }
+
+          .layout-container.result-focus {
+            grid-template-columns: 1fr;
+            max-width: 1000px;
+            margin: 0 auto 48px;
+          }
+
+          .layout-container.result-focus .result-column {
+            order: 1;
+            margin-bottom: 32px;
+          }
+
+          .layout-container.result-focus .inputs-column {
+            order: 2;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+          }
+
+          .layout-container.result-focus .upload-panel {
+            padding: 16px;
+          }
+
+          .layout-container.result-focus .upload-area.compact {
+            height: 160px;
           }
 
           .inputs-column {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 24px;
           }
 
@@ -685,6 +837,16 @@ export default function Home() {
             border-radius: 6px;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
             margin-bottom: 16px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+          }
+
+          .result-image.clickable {
+            cursor: pointer;
+          }
+
+          .result-image.clickable:hover {
+            transform: scale(1.02);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
           }
 
           .upload-area img, .result-area img {
@@ -758,11 +920,11 @@ export default function Home() {
           }
 
           .download-btn {
-            margin-top: 16px;
             background: #1a1a1a;
             color: white;
             border: none;
             padding: 18px 48px;
+            min-width: 140px;
             font-size: 1.125rem;
             font-weight: 400;
             border-radius: 4px;
@@ -903,6 +1065,10 @@ export default function Home() {
             text-align: center;
             margin-top: 20px;
             margin-bottom: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
           }
 
           .combine-btn {
@@ -910,6 +1076,7 @@ export default function Home() {
             color: white;
             border: none;
             padding: 18px 48px;
+            min-width: 140px;
             font-size: 1.125rem;
             font-weight: 400;
             border-radius: 4px;
@@ -950,10 +1117,83 @@ export default function Home() {
             100% { transform: rotate(360deg); }
           }
 
+          /* Full Screen Modal */
+          .fullscreen-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            cursor: pointer;
+          }
+
+          .fullscreen-content {
+            position: relative;
+            max-width: 90vw;
+            max-height: 90vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+
+          .fullscreen-image {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+          }
+
+          .close-button {
+            position: absolute;
+            top: -40px;
+            right: -40px;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s ease;
+            color: #333;
+          }
+
+          .close-button:hover {
+            background: rgba(255, 255, 255, 1);
+          }
+
+          /* Loading message animation */
+          .loading-message {
+            transition: opacity 0.3s ease;
+            min-height: 1.2em;
+            display: block;
+          }
+
           @media (max-width: 1024px) {
-            .layout-container {
+            .layout-container.input-focus {
               grid-template-columns: 1fr;
               gap: 32px;
+              max-width: 600px;
+            }
+
+            .layout-container.result-focus {
+              grid-template-columns: 1fr;
+              gap: 32px;
+            }
+
+            .layout-container.result-focus .inputs-column {
+              grid-template-columns: 1fr;
+              gap: 20px;
             }
 
             .inputs-column {
@@ -983,8 +1223,14 @@ export default function Home() {
               font-size: 1.1rem;
             }
 
-            .layout-container {
+            .layout-container.input-focus,
+            .layout-container.result-focus {
               gap: 24px;
+            }
+
+            .layout-container.result-focus .inputs-column {
+              grid-template-columns: 1fr;
+              gap: 20px;
             }
 
             .inputs-column {
@@ -1017,6 +1263,19 @@ export default function Home() {
             .combine-btn {
               padding: 14px 32px;
               font-size: 1rem;
+            }
+
+            .close-button {
+              top: 10px;
+              right: 10px;
+              width: 35px;
+              height: 35px;
+              font-size: 20px;
+            }
+
+            .fullscreen-content {
+              max-width: 95vw;
+              max-height: 95vh;
             }
           }
         `}</style>
