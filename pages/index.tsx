@@ -573,12 +573,6 @@ export default function Home() {
                       <p className="error-message">{errorMessage}</p>
                     </div>
                   )}
-                  {appState === 'idle' && (
-                    <div className="upload-placeholder">
-                      <div className="upload-icon">✨</div>
-                      <p>Your result will appear here</p>
-                    </div>
-                  )}
                 </div>
               </div>
               </div>

@@ -36,9 +36,10 @@ async function processImage(file: File): Promise<string> {
   // Downscale if needed
   let processedBuffer: Buffer = buffer;
   if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
-    processedBuffer = Buffer.from(await sharp(buffer)
+    const resizedBuffer = await sharp(buffer)
       .resize(MAX_DIMENSION, MAX_DIMENSION, { fit: 'inside', withoutEnlargement: false })
-      .toBuffer());
+      .toBuffer();
+    processedBuffer = Buffer.from(resizedBuffer);
   }
   
   // Convert to base64 without data URI prefix
