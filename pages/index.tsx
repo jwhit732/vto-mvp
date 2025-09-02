@@ -507,8 +507,8 @@ export default function Home() {
                 />
                 <small className="hint">
                   {personCarousel.currentIndex === personCarousel.stockImages.length ? 
-                    'Single subject, torso visible, arms not crossed' : 
-                    personCarousel.stockImages[personCarousel.currentIndex]?.name
+                    'For best results: Single subject, torso visible, arms not crossed' : 
+                    ''
                   }
                 </small>
               </div>
@@ -568,8 +568,8 @@ export default function Home() {
                 />
                 <small className="hint">
                   {garmentCarousel.currentIndex === garmentCarousel.stockImages.length ? 
-                    'Flat-lay product image on plain background works best' : 
-                    garmentCarousel.stockImages[garmentCarousel.currentIndex]?.name
+                    'For best results: Flat-lay product image on plain background works best' : 
+                    ''
                   }
                 </small>
               </div>
