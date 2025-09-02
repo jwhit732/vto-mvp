@@ -438,12 +438,12 @@ export default function Home() {
             ) : rateLimitDelay > 0 ? (
               `Wait ${rateLimitDelay}s`
             ) : (
-              hasTriedOnce ? 'Try Again?' : 'Try It On'
+              hasTriedOnce ? 'Try Again' : 'Try It On'
             )}
           </button>
           {resultImage && (
             <button onClick={handleDownload} className="download-btn">
-              Save Result?
+              Save Result
             </button>
           )}
         </div>
@@ -455,7 +455,6 @@ export default function Home() {
               {/* Person Upload Panel */}
               <div className="upload-panel">
                 <div className="carousel-header">
-                  <h2>Person Photo</h2>
                   <div className="carousel-nav">
                     <button 
                       className="carousel-arrow" 
@@ -517,7 +516,6 @@ export default function Home() {
               {/* Garment Upload Panel */}
               <div className="upload-panel">
                 <div className="carousel-header">
-                  <h2>Garment Image</h2>
                   <div className="carousel-nav">
                     <button 
                       className="carousel-arrow" 
@@ -581,7 +579,6 @@ export default function Home() {
             {(appState !== 'idle') && (
               <div className="result-column">
               <div className="upload-panel result-panel">
-                <h2>Result</h2>
                 <div className="result-area large">
                   {appState === 'running' && (
                     <div className="loading">
@@ -789,9 +786,9 @@ export default function Home() {
 
           .carousel-header {
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-end;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
           }
 
           .carousel-nav {

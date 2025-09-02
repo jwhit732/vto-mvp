@@ -8,7 +8,10 @@
       "Bash(git checkout:*)",
       "Bash(npm run dev:*)",
       "Bash(git merge:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm run build:*)",
+      "Bash(git restore:*)"
     ],
     "deny": [],
     "ask": []

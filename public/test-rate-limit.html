@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rate Limit Testing</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        button { margin: 5px; padding: 10px 15px; cursor: pointer; }
+        .success { color: green; }
+        .error { color: red; }
+        .warning { color: orange; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Rate Limit Testing Tool</h1>
+    <p>Test the API rate limiting without making actual API calls to Gemini.</p>
+
+    <div class="test-section">
+        <h2>Quick Tests</h2>
+        <button onclick="checkStatus()">Check Current Status</button>
+        <button onclick="simulate(1)">Simulate 1 Request</button>
+        <button onclick="simulate(5)">Simulate 5 Requests</button>
+        <button onclick="simulate(10)">Simulate 10 Requests</button>
+        <button onclick="simulate(25)">Simulate 25 Requests (Total ~30)</button>
+        <button onclick="simulate(15)">Simulate 15 More (Total ~45, Should Limit)</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Custom Simulation</h2>
+        <input type="number" id="customCount" placeholder="Number of requests" min="1" max="50" value="1">
+        <button onclick="simulateCustom()">Simulate Custom Count</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Combined API (Real Test)</h2>
+        <p><strong>Warning:</strong> This will make actual API calls if you have valid images loaded</p>
+        <button onclick="testActualAPI()">Test Actual Combine API</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Response Log</h2>
+        <div id="output"></div>
+        <button onclick="clearLog()">Clear Log</button>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const output = document.getElementById('output');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'warning' ? 'warning' : type === 'success' ? 'success' : '';
+            output.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('output').innerHTML = '';
+        }
+
+        async function checkStatus() {
+            try {
+                const response = await fetch('/api/test-rate-limit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'check' })
+                });
+                const data = await response.json();
+                log(`Status Check: ${JSON.stringify(data, null, 2)}`, 'info');
+            } catch (error) {
+                log(`Error checking status: ${error.message}`, 'error');
+            }
+        }
+
+        async function simulate(count) {
+            try {
+                const response = await fetch('/api/test-rate-limit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'simulate', count: count })
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log(`✓ Simulated ${count} requests successfully`, 'success');
+                    log(`Response: ${JSON.stringify(data, null, 2)}`, 'info');
+                } else {
+                    log(`⚠ Rate limited after simulating ${count} requests`, 'warning');
+                    log(`Response: ${JSON.stringify(data, null, 2)}`, 'warning');
+                }
+            } catch (error) {
+                log(`Error simulating requests: ${error.message}`, 'error');
+            }
+        }
+
+        async function simulateCustom() {
+            const count = document.getElementById('customCount').value;
+            if (count && count > 0) {
+                await simulate(parseInt(count));
+            } else {
+                log('Please enter a valid number of requests', 'error');
+            }
+        }
+
+        async function testActualAPI() {
+            try {
+                // This would need actual form data with images to work
+                log('Testing actual combine API (without images, should fail validation)...', 'info');
+                
+                const formData = new FormData();
+                const response = await fetch('/api/combine', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                
+                if (response.status === 429) {
+                    log(`⚠ Rate limited on actual API: ${data.error}`, 'warning');
+                    if (data.retryAfter) {
+                        log(`Retry after: ${data.retryAfter} seconds`, 'warning');
+                    }
+                } else {
+                    log(`Actual API Response (${response.status}): ${JSON.stringify(data, null, 2)}`, 'info');
+                }
+            } catch (error) {
+                log(`Error testing actual API: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-check status on page load
+        window.onload = function() {
+            log('Rate limit testing tool loaded', 'success');
+            checkStatus();
+        };
+    </script>
+</body>
+</html>
