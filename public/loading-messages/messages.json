@@ -1,64 +1,23 @@
 {
   "messages": [
     {
-      "text": "AI is analyzing 1000+ data points to create your perfect fit...",
+      "text": "Want to know what a personal stylist can do for you? Reach out!",
       "type": "tech"
     },
-    {
-      "text": "Did you know virtual try-on reduces returns by up to 30%?",
-      "type": "fact"
-    },
+    
     {
       "text": "Your virtual stylist is working its magic...",
       "type": "fun"
     },
     {
-      "text": "Fashion fact: The average person tries on 7 items before buying online",
+      "text": "Do you want to discover your personal style archetype? Contact us for a free consultation!",
       "type": "fact"
     },
-    {
-      "text": "Creating photorealistic results with advanced computer vision...",
-      "type": "tech"
-    },
-    {
-      "text": "Save time, reduce waste - try before you buy virtually!",
-      "type": "sales"
-    },
-    {
-      "text": "Processing body measurements and garment fit data...",
-      "type": "tech"
-    },
-    {
-      "text": "Virtual fitting rooms are the future of online shopping",
-      "type": "sales"
-    },
-    {
-      "text": "Fun fact: AI can predict clothing fit better than most humans!",
-      "type": "fact"
-    },
+    
     {
       "text": "Blending pixels and fashion with cutting-edge AI...",
       "type": "fun"
-    },
-    {
-      "text": "No more guessing sizes - see exactly how it looks on you!",
-      "type": "sales"
-    },
-    {
-      "text": "Our AI has been trained on millions of fashion combinations...",
-      "type": "tech"
-    },
-    {
-      "text": "Experience the future of fashion retail today",
-      "type": "sales"
-    },
-    {
-      "text": "Calculating the perfect drape and fit for your body type...",
-      "type": "tech"
-    },
-    {
-      "text": "Virtual try-on technology reduces fashion waste by 40%",
-      "type": "fact"
     }
+    
   ]
 }

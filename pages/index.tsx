@@ -918,7 +918,7 @@ export default function Home() {
             color: white;
             border: none;
             padding: 18px 48px;
-            min-width: 140px;
+            min-width: 160px;
             font-size: 1.125rem;
             font-weight: 400;
             border-radius: 4px;
@@ -1070,7 +1070,7 @@ export default function Home() {
             color: white;
             border: none;
             padding: 18px 48px;
-            min-width: 140px;
+            min-width: 160px;
             font-size: 1.125rem;
             font-weight: 400;
             border-radius: 4px;
@@ -1079,7 +1079,6 @@ export default function Home() {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            min-width: 160px;
             justify-content: center;
             font-family: 'Georgia', serif;
             letter-spacing: 0.02em;
@@ -1256,7 +1255,7 @@ export default function Home() {
               max-height: 240px;
             }
 
-            .combine-btn {
+            .combine-btn, .download-btn {
               padding: 14px 32px;
               font-size: 1rem;
             }
