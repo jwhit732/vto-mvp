@@ -1191,7 +1191,8 @@ export default function Home() {
             }
 
             .inputs-column {
-              flex-direction: row;
+              display: grid;
+              grid-template-columns: 1fr;
               gap: 24px;
             }
 
@@ -1228,7 +1229,8 @@ export default function Home() {
             }
 
             .inputs-column {
-              flex-direction: column;
+              display: grid;
+              grid-template-columns: 1fr;
               gap: 20px;
             }
 
