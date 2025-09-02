@@ -39,6 +39,7 @@ export default function Home() {
   const [showFullScreen, setShowFullScreen] = useState<boolean>(false);
   const [loadingMessages, setLoadingMessages] = useState<string[]>([]);
   const [currentMessageIndex, setCurrentMessageIndex] = useState<number>(0);
+  const [rateLimitDelay, setRateLimitDelay] = useState<number>(0);
 
   // Carousel states - Initialize with first stock image
   const [personCarousel, setPersonCarousel] = useState<CarouselState>({
@@ -97,6 +98,28 @@ export default function Home() {
       }
     };
   }, [appState, loadingMessages.length]);
+
+  // Handle rate limit countdown
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (rateLimitDelay > 0) {
+      interval = setInterval(() => {
+        setRateLimitDelay(prev => {
+          if (prev <= 1) {
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [rateLimitDelay]);
 
   // Carousel navigation handlers
   const handlePersonCarouselPrev = () => {
@@ -333,6 +356,17 @@ export default function Home() {
       const result = await response.json();
 
       if (!response.ok) {
+        // Handle rate limiting specifically
+        if (response.status === 429) {
+          if (result.type === 'delay') {
+            setRateLimitDelay(result.retryAfter);
+            setErrorMessage(`${result.error} Countdown: ${result.retryAfter}s`);
+          } else {
+            setErrorMessage(result.error);
+          }
+          setAppState('error');
+          return;
+        }
         throw new Error(result.error || 'Something went wrong');
       }
 
@@ -370,7 +404,7 @@ export default function Home() {
   const canCombine = (() => {
     const personImage = getCurrentImage(personCarousel, personState);
     const garmentImage = getCurrentImage(garmentCarousel, garmentState);
-    return personImage.url && garmentImage.url && appState !== 'running';
+    return personImage.url && garmentImage.url && appState !== 'running' && rateLimitDelay === 0;
   })();
 
   return (
@@ -401,6 +435,8 @@ export default function Home() {
                 <span className="btn-spinner"></span>
                 Trying on...
               </>
+            ) : rateLimitDelay > 0 ? (
+              `Wait ${rateLimitDelay}s`
             ) : (
               hasTriedOnce ? 'Try Again?' : 'Try It On'
             )}
@@ -569,8 +605,20 @@ export default function Home() {
                   )}
                   {appState === 'error' && (
                     <div className="error-state">
-                      <div className="error-icon">⚠️</div>
-                      <p className="error-message">{errorMessage}</p>
+                      <div className="error-icon">{rateLimitDelay > 0 ? '⏱️' : '⚠️'}</div>
+                      <p className="error-message">
+                        {rateLimitDelay > 0 ? (
+                          <>
+                            {errorMessage.replace(/Countdown: \d+s/, `Countdown: ${rateLimitDelay}s`)}
+                            <br />
+                            <small style={{color: '#667eea', fontWeight: 'normal'}}>
+                              You can try again in {rateLimitDelay} seconds
+                            </small>
+                          </>
+                        ) : (
+                          errorMessage
+                        )}
+                      </p>
                     </div>
                   )}
                 </div>

@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import formidable, { File } from 'formidable';
 import fs from 'fs';
 import sharp from 'sharp';
+import rateLimiter from '../../utils/rateLimiter';
 
 export const config = {
   api: {
@@ -246,6 +247,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const requestId = Math.random().toString(36).substring(7);
   console.log(`[${requestId}] Starting combine request`);
   
+  const rateLimit = rateLimiter.checkRateLimit(req);
+  
+  if (!rateLimit.allowed) {
+    console.log(`[${requestId}] Rate limit exceeded`);
+    
+    if (rateLimit.delay) {
+      return res.status(429).json({ 
+        error: rateLimit.message,
+        retryAfter: rateLimit.delay,
+        type: 'delay'
+      });
+    } else {
+      return res.status(429).json({ 
+        error: rateLimit.message,
+        type: 'limit_reached'
+      });
+    }
+  }
+  
   const startTime = Date.now();
 
   try {
@@ -296,10 +316,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       requestId
     );
 
+    rateLimiter.recordRequest(req);
+    
     const endTime = Date.now();
     console.log(`[${requestId}] Request completed in ${endTime - startTime}ms`);
 
-    res.status(200).json({ image: resultBase64 });
+    res.status(200).json({ 
+      image: resultBase64,
+      remainingCalls: rateLimit.remainingCalls,
+      globalRemaining: rateLimit.globalRemaining
+    });
 
   } catch (error) {
     const endTime = Date.now();
