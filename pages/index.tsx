@@ -671,13 +671,13 @@ export default function Home() {
           .container {
             min-height: 100vh;
             background: #ffffff;
-            padding: 40px 20px;
+            padding: 20px 20px 40px 20px;
           }
 
           header {
             text-align: center;
             color: #1a1a1a;
-            margin-bottom: 60px;
+            margin-bottom: 30px;
             max-width: 800px;
             margin-left: auto;
             margin-right: auto;
